@@ -34,6 +34,8 @@ local.properties
 *.keystore
 !debug.keystore
 /android/app/src/config
+android/app/src/config/Firebase.js
+/android/app/src/config/Firebase.js
 
 # node.js
 #
