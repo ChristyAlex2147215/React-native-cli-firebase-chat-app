@@ -13,6 +13,8 @@ const Home = () => {
   const [users, SetUsers] = useState({});
   const firestoreForDefaultApp = firestore();
   const [state, setState] = useContext(AuthContext);
+  const [to, setTo] = useState('');
+  const [roomId, SetRoomId] = useState();
 
   useEffect(() => {
     const fetchAllUsers = async () => {
@@ -38,70 +40,175 @@ const Home = () => {
     fetchAllUsers();
   }, []);
 
+  const updateLastSeen = async email => {
+    const usersRef = firestoreForDefaultApp.collection('users').doc('users');
+
+    // Fetch the current data
+    const doc = await usersRef.get();
+
+    if (doc.exists) {
+      const userData = doc.data();
+
+      // Find the index of the element with the matching email
+      const emailIndex = userData.email.findIndex(item => item.email === email);
+
+      if (emailIndex !== -1) {
+        // Update the lastOpen field for the matching element
+        userData.email[emailIndex].lastOpen = new Date();
+
+        // Update the document with the modified data
+        await usersRef.update({
+          email: userData.email,
+        });
+
+        console.log('lastOpen updated successfully.');
+      } else {
+        console.log('Email not found in the array.');
+      }
+    } else {
+      console.log('Document does not exist.');
+    }
+  };
+
+  const setRoom = async to => {
+    await updateLastSeen(to);
+    let roomId;
+
+    if (to === 'Group Chat') {
+      roomId = 'chatID4';
+    } else {
+      const usersSet = new Set([state.user, to]);
+
+      if (
+        usersSet.has('christy@gmail.com') &&
+        usersSet.has('christyalexgamer@gmail.com')
+      ) {
+        roomId = 'chatID1';
+      } else if (
+        usersSet.has('christy@gmail.com') &&
+        usersSet.has('christyalexe@gmail.com')
+      ) {
+        roomId = 'chatID2';
+      } else if (
+        usersSet.has('christyalexgamer@gmail.com') &&
+        usersSet.has('christyalexe@gmail.com')
+      ) {
+        roomId = 'chatID3';
+      }
+    }
+    console.log('ROOM ID is =>', roomId);
+    navigation.navigate('Chat', {
+      chatId: roomId,
+      otherUser: users[0],
+    });
+  };
+
   return (
+    // <View>
+    //   <View style={{justifyContent: 'center', flexDirection: 'column'}}>
+    //     {users?.email?.map((item, index) => {
+    //       console.log(item);
+    //       console.log(state.user);
+    //       if (item !== state.user) {
+    //         return (
+    //           <TouchableOpacity
+    //             onPress={item => setRoom(item)}
+    //             key={index}
+    //             style={{
+    //               flexDirection: 'row',
+    //               justifyContent: 'space-evenly',
+    //               marginTop: 15,
+    //               backgroundColor: 'grey',
+    //             }}>
+    //             <Image
+    //               source={require('../image/jss.png')}
+    //               style={{
+    //                 backgroundColor: 'white',
+    //                 width: 50,
+    //                 aspectRatio: 1,
+    //                 borderRadius: 25,
+    //                 borderColor: 'black',
+    //                 borderWidth: 2,
+    //               }}
+    //             />
+    //             <Text
+    //               style={{
+    //                 fontSize: 18,
+    //                 textAlign: 'auto',
+    //                 justifyContent: 'center',
+    //                 alignSelf: 'center',
+    //               }}>
+    //               {item.email}
+    //             </Text>
+    //           </TouchableOpacity>
+    //         );
+    //       } else {
+    //         return <></>;
+    //       }
+    //     })}
+    //   </View>
+    //   {/* fab */}
+    //   {/* <View style={styles.container}>
+    //     <TouchableOpacity
+    //       onPress={() => navigation.navigate('Chat')}
+    //       style={styles.chatButton}>
+    //       <Text
+    //         style={{
+    //           fontSize: 22,
+    //           justifyContent: 'center',
+    //           alignContent: 'center',
+    //         }}>
+    //         Encrypto
+    //       </Text>
+    //     </TouchableOpacity>
+    //   </View> */}
+    // </View>
     <View>
       <View style={{justifyContent: 'center', flexDirection: 'column'}}>
-        {users[0]?.email?.map((item, index) => {
-          console.log(item);
-          console.log(state.user);
-          if (item !== state.user) {
-            return (
-              <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('Chat', {
-                    chatId: 'chatID1',
-                    otherUser: users[0],
-                  })
-                }
-                key={index}
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-evenly',
-                  marginTop: 15,
-                  backgroundColor: 'grey',
-                }}>
-                <Image
-                  source={require('../image/jss.png')}
+        {/* Sort the users array by lastOpen timestamps in descending order */}
+        {users[0]?.email
+          .sort((a, b) => b.lastOpen.seconds - a.lastOpen.seconds)
+          .map((user, index) => {
+            console.log(index, user);
+            if (user.email !== state.user) {
+              return (
+                <TouchableOpacity
+                  onPress={() => setRoom(user.email)} // Pass the email here
+                  key={index}
                   style={{
-                    backgroundColor: 'white',
-                    width: 50,
-                    aspectRatio: 1,
-                    borderRadius: 25,
-                    borderColor: 'black',
-                    borderWidth: 2,
-                  }}
-                />
-                <Text
-                  style={{
-                    fontSize: 18,
-                    textAlign: 'auto',
-                    justifyContent: 'center',
-                    alignSelf: 'center',
+                    flexDirection: 'row',
+                    marginTop: 15,
+                    backgroundColor: 'grey',
                   }}>
-                  {item}
-                </Text>
-              </TouchableOpacity>
-            );
-          } else {
-            return <></>;
-          }
-        })}
+                  <Image
+                    source={require('../image/jss.png')}
+                    style={{
+                      backgroundColor: 'white',
+                      width: 50,
+                      aspectRatio: 1,
+                      borderRadius: 25,
+                      borderColor: 'black',
+                      borderWidth: 2,
+                      marginHorizontal:10
+                    }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      textAlign: 'auto',
+                      justifyContent: 'center',
+                      alignSelf: 'center',
+                      marginLeft:40
+                    }}>
+                    {user.email}
+                  </Text>
+                </TouchableOpacity>
+              );
+            } else {
+              return <></>;
+            }
+          })}
       </View>
-      {/* fab */}
-      {/* <View style={styles.container}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Chat')}
-          style={styles.chatButton}>
-          <Text
-            style={{
-              fontSize: 22,
-              justifyContent: 'center',
-              alignContent: 'center',
-            }}>
-            Encrypto
-          </Text>
-        </TouchableOpacity>
-      </View> */}
     </View>
   );
 };

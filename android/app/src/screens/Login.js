@@ -39,7 +39,10 @@ const Login = () => {
           .collection('users')
           .doc('users')
           .update({
-            email: firestore.FieldValue.arrayUnion(email),
+            email: firestore.FieldValue.arrayUnion({
+              email,
+              lastOpen: new Date(),
+            }),
           });
       } catch (firestoreError) {
         console.error('Error adding document to Firestore:', firestoreError);

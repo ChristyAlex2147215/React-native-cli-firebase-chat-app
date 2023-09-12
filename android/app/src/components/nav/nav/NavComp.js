@@ -24,7 +24,7 @@ function NavComp() {
           name="Home"
           component={Home}
           options={{
-            title: 'Home page',
+            title:"Home "+state.user,
             headerBackTitle: 'Go Back',
             headerRight: () => <HeaderTabs />,
           }}

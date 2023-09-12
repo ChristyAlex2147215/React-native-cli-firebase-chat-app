@@ -58,8 +58,11 @@ function Chat({route}) {
           margin: 5,
           padding: 10,
         }}>
-        <Text>{item.text}</Text>
-        {/* <Text>{item.createdAt}</Text> */}
+        <Text style={{fontSize: 18}}>{item.text}</Text>
+        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+          <Text>{item.sender}</Text>
+          <Text>{item.createdAt.toString().slice(15, 25)}</Text>
+        </View>
       </View>
     );
   };
