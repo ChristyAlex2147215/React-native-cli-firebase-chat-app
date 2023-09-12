@@ -12,11 +12,14 @@ import auth from '@react-native-firebase/auth';
 import {AuthContext} from '../context/authContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import firestore from '@react-native-firebase/firestore'; // Import firestore correctly
+import {db} from '../config/Firebase';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [state, setState] = useContext(AuthContext);
+  const firestoreForDefaultApp = firestore();
+  console.log('Default app =>', firestoreForDefaultApp);
 
   const navigation = useNavigation();
 
@@ -30,12 +33,19 @@ const Login = () => {
       setState({user: email});
       await AsyncStorage.setItem('@auth', JSON.stringify({user: email}));
 
-      // Add user data to Firestore
-      await firestore()
-        .collection('users')
-        .add({email: email, password: password});
+      // Add a new document with a generated id.
+      try {
+        await firestoreForDefaultApp
+          .collection('users')
+          .doc('users')
+          .update({
+            email: firestore.FieldValue.arrayUnion(email),
+          });
+      } catch (firestoreError) {
+        console.error('Error adding document to Firestore:', firestoreError);
+      }
 
-      console.log(login);
+      console.log('Login successful');
       navigation.navigate('Home');
     } catch (error) {
       if (
